@@ -1,6 +1,12 @@
 //npx http-server -p 8080
 ///workspaces/Game (main) $ python -m http.server
-
+// window.onload = function playAgain(){
+//   bullets = []
+//   end = false
+//   playerOne.damage = 0
+//   playerTwo.damage = 0
+// }
+// document.getElementById('startOver').addEventListener('click', playAgain)
 //initialization
 
 var WindowWidth = 20*Math.floor((window.innerWidth-40)/20);
@@ -158,7 +164,7 @@ class Shield{
     this.player = player
     this.damage = 2
     this.left = false
-    this.MasterX = 13.5*xsize
+    this.MasterX = 14.5*xsize
     this.MasterY = 2.5*ysize
     this.attackTick = 0
     this.damageReduction = 2
@@ -228,6 +234,7 @@ class Duck{
     this.health = 100
     this.facingLeft = false
     this.yspeed = 0
+    this.xspeed = 0
     this.damage = 0
     this.player = player
     this.weapon = new Fist(player)
@@ -239,7 +246,7 @@ class Duck{
   }
   takeDamage(damage, dir){
     var left = false
-    if(dir<0){
+    if(dir<0 || dir === true){
       left = true
     }
     if(this.facingLeft == left){
@@ -247,6 +254,12 @@ class Duck{
     }else{
       this.damage += damage/this.weapon.damageReduction
     }
+    if(left){
+      this.xspeed = -4
+    }else{
+      this.xspeed = 4
+    }
+    this.yspeed  = 3
   }
   move(inp){
     this.x = Math.floor(this.x + xsize/16*inp)
@@ -284,10 +297,18 @@ class Duck{
     if(this.onGround == false){
       this.yspeed = this.yspeed-1
     }
+    if(this.xspeed<0){
+      this.xspeed ++
+    }
+    if(this.xspeed>0){
+      this.xspeed -- 
+    }
     land(playerOne)
     land(playerTwo)
     this.y = this.y-this.yspeed
+    this.x = this.x+this.xspeed
     this.y = constrain(this.y, 0, WindowHeight-2*ysize)
+    this.x = constrain(this.x, 0, WindowWidth-xsize)
     this.show()
     this.weapon.update()
   }
@@ -404,7 +425,8 @@ function pickUp(){
     for(var m=0; m<lonelyWeapons.length; m++){
       if(arr[i].x < lonelyWeapons[m].MasterX 
         && arr[i].x + xsize > lonelyWeapons[m].MasterX 
-        && Math.floor(arr[i].y - lonelyWeapons[m].MasterY)<=ysize){
+        && arr[i].y + ysize > lonelyWeapons[m].MasterY
+        && arr[i].y < lonelyWeapons[m].MasterY+.5*ysize){
           if(arr[i].weapon.damage>0){
             arr[i].weapon.player = 0
             temp = arr[i].weapon
@@ -529,12 +551,12 @@ function images(){
   }
 }
 
-function playAgain(){
-  bullets = []
-  end = false
-  playerOne.damage = 0
-  playerTwo.damage = 0
-}
+// function playAgain(){
+//   bullets = []
+//   end = false
+//   playerOne.damage = 0
+//   playerTwo.damage = 0
+// }
 
 function setup() {
   createCanvas(WindowWidth,WindowHeight)
@@ -550,12 +572,12 @@ var playerOne = new Duck(WindowWidth/20,WindowHeight-ysize, 2)
 var playerTwo = new Duck(18*WindowWidth/20,WindowWidth-ysize, 1)
 var arr = [playerOne, playerTwo]
 platforms.push(new Platform(1*xsize,5*ysize, 3*xsize, ysize))
-platforms.push(new Platform(12*xsize,3*ysize, 7*xsize, 3*ysize))
+platforms.push(new Platform(13*xsize,3*ysize, 6*xsize, 2*ysize))
 platforms.push(new Platform(7*xsize,6*ysize, 4*xsize, 2*ysize))
 platforms.push(new Rock(5* xsize, 18*ysize, xsize, ysize))
 platforms.push(new Rock(8* xsize, 17*ysize, 2*xsize, 2*ysize))
 platforms.push(new Rock(14* xsize, 18*ysize, xsize, ysize))
-playerOne.facingLeft = true
+playerTwo.facingLeft = true
 playerOne.weapon.left = true
 var damageLeftp2 = (playerTwo.health-playerTwo.damage)
 var damageLeftp1 = (playerOne.health-playerOne.damage)
