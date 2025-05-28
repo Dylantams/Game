@@ -7,6 +7,7 @@
 //   playerTwo.damage = 0
 // }
 // document.getElementById('startOver').addEventListener('click', playAgain)
+//fix bullets hitting player into a rock
 //initialization
 
 var WindowWidth = 20*Math.floor((window.innerWidth-40)/20);
@@ -35,6 +36,8 @@ let rshield
 let alshield
 let arshield
 let rock
+let trdduck
+let tldduck
 
 var platforms = []
 function preload(){
@@ -54,6 +57,8 @@ function preload(){
   alshield = loadImage('/images/alshield.png')
   arshield = loadImage('/images/arshield.png')
   rock = loadImage('/images/rock.png')
+  trdduck = loadImage('/images/trdduck.png')
+  tldduck = loadImage('/images/tldduck.png')
 }
 
 
@@ -240,6 +245,7 @@ class Duck{
     this.weapon = new Fist(player)
     this.onGround = true
     this.onPlatform = false
+    this.damaged = 0
   }
   attack(){
     this.weapon.attack(this.facingLeft, this.x, this.y)
@@ -260,6 +266,7 @@ class Duck{
       this.xspeed = 4
     }
     this.yspeed  = 3
+    this.damaged = 5
   }
   move(inp){
     this.x = Math.floor(this.x + xsize/16*inp)
@@ -282,12 +289,19 @@ class Duck{
   show(){
     fill(0)
     // rect(this.x, this.y, xsize, ysize)
-    if(this.facingLeft){
-      image(lduck, this.x, this.y, xsize, ysize)
+    if(this.damaged == 0){
+      if(this.facingLeft){
+        image(lduck, this.x, this.y, xsize, ysize)
+      }else{
+        image(rduck, this.x, this.y, xsize, ysize)
+      }
     }else{
-      image(rduck, this.x, this.y, xsize, ysize)
+      if(this.facingLeft){
+        image(tldduck, this.x, this.y, xsize, ysize)
+      }else{
+        image(trdduck, this.x, this.y, xsize, ysize)
+      }
     }
-    
   }
   update(){
     if(this.y>= WindowHeight-2*ysize){
@@ -302,6 +316,9 @@ class Duck{
     }
     if(this.xspeed>0){
       this.xspeed -- 
+    }
+    if(this.damaged>0){
+      this.damaged --
     }
     land(playerOne)
     land(playerTwo)
