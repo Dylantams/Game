@@ -38,6 +38,8 @@ let arshield
 let rock
 let trdduck
 let tldduck
+let lhgun
+let rhgun
 
 var platforms = []
 function preload(){
@@ -59,6 +61,8 @@ function preload(){
   rock = loadImage('/images/rock.png')
   trdduck = loadImage('/images/trdduck.png')
   tldduck = loadImage('/images/tldduck.png')
+  lhgun = loadImage('/images/lhgun.png')
+  rhgun = loadImage('/images/rhgun.png')
 }
 
 
@@ -80,7 +84,7 @@ class Sword{
     this.left = false
     this.attackTime = 6
     this.attackTick = 0
-    this.MasterX = 2.25*xsize
+    this.MasterX = 3.25*xsize
     this.MasterY = 4.5*ysize
     this.damageReduction = 1
   }
@@ -134,7 +138,7 @@ class Sword{
 class Gun{
   constructor(player = 0){
     this.player = player
-    this.damage = 2
+    this.damage = 4
     this.left = false
     this.MasterX = 17.5*xsize
     this.MasterY = 2.5*ysize
@@ -164,10 +168,52 @@ class Gun{
   }
 }
 
+class HomingGun{
+  constructor(player = 0){
+    this.player = player
+    this.bulletLife = 140
+    this.left = false
+    this.MasterX = 1.25*xsize
+    this.MasterY = 4.5 * ysize
+    this.damageReduction = .25
+    this.damage = 2
+  }
+  attack(left, x, y){
+    let player = arr[this.player-1]
+    let opponent
+    if(player == playerOne){
+      opponent  = playerTwo
+    }else{
+      opponent = playerOne
+    }
+    if(player.x>opponent.x){
+      bullets.push(new hBullet(x-25, y+(ysize/2), this.player, this.bulletLife))
+    }else{
+      bullets.push(new hBullet(x+xsize+25, y+(ysize/2), this.player, this.bulletLife))
+    }
+    
+  }
+  show(){
+    if(this.player>0){
+      if(this.left){
+        image(lhgun, arr[this.player-1].x-xsize/5, arr[this.player-1].y, xsize/2, ysize/2)
+      }else{
+        image(rhgun, arr[this.player-1].x+3.5*xsize/5, arr[this.player-1].y, xsize/2, ysize/2)
+      }
+    }else{
+      image(lhgun, this.MasterX, this.MasterY, xsize/2, ysize/2)
+    }
+  }
+  update(){
+    this.show()
+  }
+
+}
+
 class Shield{
   constructor(player = 0){
     this.player = player
-    this.damage = 2
+    this.damage = 3
     this.left = false
     this.MasterX = 14.5*xsize
     this.MasterY = 2.5*ysize
@@ -246,6 +292,9 @@ class Duck{
     this.onGround = true
     this.onPlatform = false
     this.damaged = 0
+    this.jumpHeight = 20
+    this.jumps = 5
+    this.jumpsLeft = 5
   }
   attack(){
     this.weapon.attack(this.facingLeft, this.x, this.y)
@@ -283,8 +332,11 @@ class Duck{
     }
   }
   jump(){
-    this.yspeed = 15
-    this.onGround = false
+    if(this.jumpsLeft >0){
+      this.yspeed = this.jumpHeight
+      this.onGround = false
+      this.jumpsLeft--
+    }
   }
   show(){
     fill(0)
@@ -319,6 +371,9 @@ class Duck{
     }
     if(this.damaged>0){
       this.damaged --
+    }
+    if(this.onGround == true){
+      this.jumpsLeft = this.jumps
     }
     land(playerOne)
     land(playerTwo)
@@ -374,6 +429,74 @@ class Bullet {
 
 }
 
+class hBullet{
+  constructor(x, y, player, bulletLife){
+    this.y = y;
+    this.x = x;
+    this.player = player
+    this.speed = Math.floor(WindowWidth/200);
+    this.dir = 1
+    this.timeLeft = bulletLife
+    if(Math.floor(WindowWidth/500)>0){
+      this.xWidth = Math.floor(WindowWidth/155);
+    }else{
+      this.xWidth = 1;
+    }
+    if(Math.floor(WindowHeight/155)>0){
+      this.yWidth = Math.floor(WindowHeight/500);
+    }else{
+      this.yWidth = 1;
+    }
+    
+    
+  }
+
+  location() {
+    let opponent
+    if(this.player == 1){
+      opponent = playerTwo
+    }else{
+      opponent = playerOne
+    }
+    var xcomp = this.x - opponent.x
+    var ycomp = this.y - opponent.y
+    var x2 = xcomp**2
+    var y2 = ycomp**2
+    var hyp = Math.sqrt(x2+y2)
+    this.x = this.x - this.speed*xcomp/hyp
+    this.y = this.y - this.speed*ycomp/hyp
+    if(xcomp > 0){
+      this.dir = -1
+    }else{
+      this.dir = 1
+    }
+
+    //pythagorean theorum to update the location, figure out dir when using the hit formula
+  }
+
+  fill(){
+    fill(0,0,0);
+    rect(this.x-2, this.y-2, this.xWidth+4, this.yWidth+4);
+  }
+
+  show() {
+    
+    fill(255);
+    rect(this.x, this.y, this.xWidth, this.yWidth);
+
+  }
+  update() {
+    this.timeLeft --
+    if(this.timeLeft <1){
+      bullets.splice(bullets.indexOf(this), 1)
+    }
+    this.fill();
+    this.location();
+    this.show();
+
+  }
+}
+
 class Platform{
   constructor(x1, y1, width, height){
     this.x = x1,
@@ -396,6 +519,7 @@ class Rock extends Platform{
 }
 
 function land(player){
+  var grounded = false
   for(var i=0; i<platforms.length; i++){
     if(
     (platforms[i].x < player.x+xsize 
@@ -404,14 +528,12 @@ function land(player){
     && platforms[i].y + player.yspeed <= player.y+ysize)
     && player.yspeed <1)
     {
-      player.onGround = true
+      grounded = true
       player.yspeed = 0
       player.y = platforms[i].y - ysize
       
-    }else{
-      player.onGround = false
-      
     }
+    player.onGround = grounded
     if(
     (platforms[i].x < player.x+xsize 
     && platforms[i].x + platforms[i].width > player.x 
@@ -423,18 +545,17 @@ function land(player){
     //check to see if it is hitting on either side
     if(player.x + xsize > platforms[i].x && player.x + xsize - Math.floor(xsize/16) -1 <= platforms[i].x
     && player.y + ysize > platforms[i].y 
-    && player.y < platforms[i].y + platforms[i].height && player.facingLeft == false){
+    && player.y < platforms[i].y + platforms[i].height && (player.facingLeft == false || player.xspeed > 0)){
       player.x = platforms[i].x - xsize -1
     }
 
     if(player.x < platforms[i].x + platforms[i].width && player.x + Math.floor(xsize) +1 >= platforms[i].x + platforms[i].width
     && player.y + ysize > platforms[i].y 
-    && player.y < platforms[i].y + platforms[i].height && player.facingLeft == true){
+    && player.y < platforms[i].y + platforms[i].height && (player.facingLeft == true || player.xspeed < 0)){
       player.x = platforms[i].x + platforms[i].width + 1
     }
     
   }
-
 }
 
 function pickUp(){
@@ -598,7 +719,7 @@ playerTwo.facingLeft = true
 playerOne.weapon.left = true
 var damageLeftp2 = (playerTwo.health-playerTwo.damage)
 var damageLeftp1 = (playerOne.health-playerOne.damage)
-lonelyWeapons.push(new Sword, new Sword, new Gun, new Gun, new Shield, new Shield)
+lonelyWeapons.push(new Sword, new Sword, new Gun, new Gun, new Shield, new Shield, new HomingGun, new HomingGun)
 document.getElementById("damage").innerHTML = "Player One Health: " + damageLeftp1 + " Player Two Health: " + damageLeftp2;
 
 function draw() {
