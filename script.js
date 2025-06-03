@@ -30,6 +30,8 @@ let trdduck
 let tldduck
 let lhgun
 let rhgun
+let playerOneWins
+let playerTwoWins
 
 var platforms = []
 function preload(){
@@ -53,6 +55,8 @@ function preload(){
   tldduck = loadImage('/images/tldduck.png')
   lhgun = loadImage('/images/lhgun.png')
   rhgun = loadImage('/images/rhgun.png')
+  playerOneWins = loadImage('/images/playerOneWins.png')
+  playerTwoWins = loadImage('/images/playerTwoWins.png')
 }
 
 
@@ -669,9 +673,11 @@ function header(){
   if(damageLeftp2<=0){
     end = true
     document.getElementById("end").innerHTML = "Game Over. Player One Wins!"
+    image(playerOneWins, 5*xsize, 0, 10*xsize, 5*ysize)
   }else if(damageLeftp1<=0){
     end = true
     document.getElementById("end").innerHTML = "Game Over. Player Two Wins!"
+    image(playerTwoWins, 5*xsize, 0, 10*xsize, 5*ysize)
   }
 }
 
