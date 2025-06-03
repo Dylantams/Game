@@ -1,14 +1,4 @@
-//npx http-server -p 8080
-///workspaces/Game (main) $ python -m http.server
-// window.onload = function playAgain(){
-//   bullets = []
-//   end = false
-//   playerOne.damage = 0
-//   playerTwo.damage = 0
-// }
-// document.getElementById('startOver').addEventListener('click', playAgain)
-//fix bullets hitting player into a rock
-//initialization
+document.getElementById('startOver').addEventListener('click', playAgain)
 
 var WindowWidth = 20*Math.floor((window.innerWidth-40)/20);
 var WindowHeight = 20*Math.floor((window.innerHeight-40)/20);
@@ -72,6 +62,8 @@ class Fist{
     this.damage = 0
     this.damageReduction = 1
     this.left = false
+    this.damageMultiplyer = 1
+    this.speedBuff = 1
   }
   update(){}
   attack(){}
@@ -87,6 +79,8 @@ class Sword{
     this.MasterX = 3.25*xsize
     this.MasterY = 4.5*ysize
     this.damageReduction = 1
+    this.damageMultiplyer = 1
+    this.speedBuff = 1.5
   }
   attack(left, x, y){
     var player = arr[this.player-1]
@@ -143,14 +137,24 @@ class Gun{
     this.MasterX = 17.5*xsize
     this.MasterY = 2.5*ysize
     this.damageReduction = 1
+    this.damageMultiplyer = 1
+    this.speedBuff = 1
+    this.cooldownTime = 50
+    this.cooldownTick = 0
   }
   attack(left, x, y){
-    if(left){
-      bullets.push(new Bullet(x-25, y+(ysize/2),-1))
-    }else{
-      bullets.push(new Bullet(x+xsize+25, y+(ysize/2),1))
+    if(this.cooldownTick == 0){
+      if(left){
+        bullets.push(new Bullet(x-25, y+(ysize),-1))
+        bullets.push(new Bullet(x-25, y+(ysize/2),-1))
+        bullets.push(new Bullet(x-25, y,-1))
+      }else{
+        bullets.push(new Bullet(x + xsize +25, y+(ysize),1))
+        bullets.push(new Bullet(x + xsize +25, y+(ysize/2),1))
+        bullets.push(new Bullet(x + xsize +25, y,1))
+      } 
+      this.cooldownTick = this.cooldownTime
     }
-    
   }
   show(){
     if(this.player>0){
@@ -164,6 +168,9 @@ class Gun{
     }
   }
   update(){
+    if(this.cooldownTick>0){
+      this.cooldownTick--
+    }
     this.show()
   }
 }
@@ -175,23 +182,29 @@ class HomingGun{
     this.left = false
     this.MasterX = 1.25*xsize
     this.MasterY = 4.5 * ysize
-    this.damageReduction = .25
-    this.damage = 2
+    this.damageReduction = 1
+    this.damage = 3
+    this.damageMultiplyer = 1.5
+    this.speedBuff = .5
+    this.cooldownTime = 11
+    this.cooldownTick = 0
   }
   attack(left, x, y){
-    let player = arr[this.player-1]
-    let opponent
-    if(player == playerOne){
-      opponent  = playerTwo
-    }else{
-      opponent = playerOne
+    if(this.cooldownTick == 0){
+      this.cooldownTick = this.cooldownTime
+      let player = arr[this.player-1]
+      let opponent
+      if(player == playerOne){
+        opponent  = playerTwo
+      }else{
+        opponent = playerOne
+      }
+      if(player.x>opponent.x){
+        bullets.push(new hBullet(x-25, y+(ysize/2), this.player, this.bulletLife))
+      }else{
+        bullets.push(new hBullet(x+xsize+25, y+(ysize/2), this.player, this.bulletLife))
+      }
     }
-    if(player.x>opponent.x){
-      bullets.push(new hBullet(x-25, y+(ysize/2), this.player, this.bulletLife))
-    }else{
-      bullets.push(new hBullet(x+xsize+25, y+(ysize/2), this.player, this.bulletLife))
-    }
-    
   }
   show(){
     if(this.player>0){
@@ -205,6 +218,9 @@ class HomingGun{
     }
   }
   update(){
+    if(this.cooldownTick>0){
+      this.cooldownTick--
+    }
     this.show()
   }
 
@@ -220,6 +236,8 @@ class Shield{
     this.attackTick = 0
     this.damageReduction = 2
     this.attackTime = 6
+    this.damageMultiplyer = 1
+    this.speedBuff = 1
   }
   attack(left){
     var player = arr[this.player-1]
@@ -301,6 +319,7 @@ class Duck{
   }
   takeDamage(damage, dir){
     var left = false
+    damage = damage*this.weapon.damageMultiplyer
     if(dir<0 || dir === true){
       left = true
     }
@@ -318,7 +337,7 @@ class Duck{
     this.damaged = 5
   }
   move(inp){
-    this.x = Math.floor(this.x + xsize/16*inp)
+    this.x = Math.floor(this.x + this.weapon.speedBuff*xsize/16*inp)
     if(inp>0){
       this.x = this.x+1
     }
@@ -458,8 +477,8 @@ class hBullet{
     }else{
       opponent = playerOne
     }
-    var xcomp = this.x - opponent.x
-    var ycomp = this.y - opponent.y
+    var xcomp = this.x - (opponent.x+xsize/2)
+    var ycomp = this.y - (opponent.y+ysize/2)
     var x2 = xcomp**2
     var y2 = ycomp**2
     var hyp = Math.sqrt(x2+y2)
@@ -543,13 +562,13 @@ function land(player){
       player.yspeed = player.y - platforms[i].y - platforms[i].height - 1
     }
     //check to see if it is hitting on either side
-    if(player.x + xsize > platforms[i].x && player.x + xsize - Math.floor(xsize/16) -1 <= platforms[i].x
+    if(player.x + xsize > platforms[i].x && player.x + xsize - Math.floor(player.weapon.speedBuff*xsize/16) -1 <= platforms[i].x
     && player.y + ysize > platforms[i].y 
     && player.y < platforms[i].y + platforms[i].height && (player.facingLeft == false || player.xspeed > 0)){
       player.x = platforms[i].x - xsize -1
     }
 
-    if(player.x < platforms[i].x + platforms[i].width && player.x + Math.floor(xsize) +1 >= platforms[i].x + platforms[i].width
+    if(player.x < platforms[i].x + platforms[i].width && player.x + Math.floor(player.weapon.speedBuff*xsize/16) +1 >= platforms[i].x + platforms[i].width
     && player.y + ysize > platforms[i].y 
     && player.y < platforms[i].y + platforms[i].height && (player.facingLeft == true || player.xspeed < 0)){
       player.x = platforms[i].x + platforms[i].width + 1
@@ -613,6 +632,11 @@ function hit(){
     }
     
   }
+  for(var i=0; i<bullets.length; i++){
+    if(bullets[i].y > WindowHeight-ysize-3){
+      bullets.splice(i,1)
+    }
+  }
 }
 
 function hitObstacle(){
@@ -642,9 +666,12 @@ function header(){
   var damageLeftp2 = (playerTwo.health-playerTwo.damage)
   var damageLeftp1 = (playerOne.health-playerOne.damage)
   document.getElementById("damage").innerHTML = "Player One Health: " + damageLeftp1 + "      Player Two Health: " + damageLeftp2;
-  if(damageLeftp2<=0 || damageLeftp1<=0){
+  if(damageLeftp2<=0){
     end = true
-    document.getElementById("end").innerHTML = "Game Over"
+    document.getElementById("end").innerHTML = "Game Over. Player One Wins!"
+  }else if(damageLeftp1<=0){
+    end = true
+    document.getElementById("end").innerHTML = "Game Over. Player Two Wins!"
   }
 }
 
@@ -689,12 +716,27 @@ function images(){
   }
 }
 
-// function playAgain(){
-//   bullets = []
-//   end = false
-//   playerOne.damage = 0
-//   playerTwo.damage = 0
-// }
+function checkEnd(){
+  if(end){
+    document.getElementById('startOver').removeAttribute('hidden')
+  }else{
+    document.getElementById('startOver').setAttribute("hidden", 'hidden')
+  }
+}
+
+function playAgain(){
+  bullets = []
+  end = false
+  document.getElementById('end').innerHTML = ""
+  playerOne = new Duck(WindowWidth/20,WindowHeight-ysize, 2)
+  playerTwo = new Duck(18*WindowWidth/20,WindowWidth-ysize, 1)
+  arr = [playerOne, playerTwo]
+  playerTwo.facingLeft = true
+  playerOne.weapon.left = true
+  lonelyWeapons.splice(0)
+  lonelyWeapons.push(new Sword, new Sword, new Gun, new Gun, new Shield, new Shield, new HomingGun, new HomingGun)
+  document.getElementById("damage").innerHTML = "Player One Health: " + damageLeftp1 + " Player Two Health: " + damageLeftp2;
+}
 
 function setup() {
   createCanvas(WindowWidth,WindowHeight)
@@ -723,6 +765,7 @@ lonelyWeapons.push(new Sword, new Sword, new Gun, new Gun, new Shield, new Shiel
 document.getElementById("damage").innerHTML = "Player One Health: " + damageLeftp1 + " Player Two Health: " + damageLeftp2;
 
 function draw() {
+  checkEnd()
   if(!end){
     images()
     keys()
@@ -750,3 +793,8 @@ function keyPressed(){
   }
   
 }
+//I added 5 extra lines
+//of script so that the
+//grand total would come up to
+//800 lines
+//!
