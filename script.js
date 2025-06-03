@@ -185,7 +185,7 @@ class HomingGun{
     this.damageReduction = 1
     this.damage = 3
     this.damageMultiplyer = 1.5
-    this.speedBuff = .5
+    this.speedBuff = .8
     this.cooldownTime = 11
     this.cooldownTick = 0
   }

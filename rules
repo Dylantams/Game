@@ -1,7 +1,39 @@
 1. Get weapons 
 2. Use those weapons to kill your opponent
 3. You can only jump 5 times at a time
-4. a/left_arrow = move left
-5. d/right_arrow = move right
-6. w/up_arrow = jump
-7. s/down_arrow = attack
+4. [hold] a/left_arrow = move left
+5. [hold] d/right_arrow = move right
+6. [press] w/up_arrow = jump
+7. [press] s/down_arrow = attack
+Tips:
+1. The homing gun is easy to use and good at mid range- watch out though, you take 2x the normal damage if you are holding it
+2. The shield halves the damage you take, if you are facing towards where it is coming from!  It also does some damage too
+3. The shotgun is good at long range, and does massive damage but the reload speed makes it lose at short or medium range to every other weapon
+4. The sword is great at close range, and does significant of damage
+
+Sword Stats:
+5 damage*
+2x movement speed
+1x damage taken
+
+Shield stats:
+3 damage*
+1x movement speed
+.5x damage taken
+
+Homing gun stats:
+3 damage (per bullet)*
+.8x movement speed
+2x damage taken
+slow bullets
+
+Shotgun Stats:
+4 damage (per bullet)*
+3 bullets per shot
+1x movement speed
+1x damage taken
+fast bullets
+
+*damage not accounting for modifiers such as the shield damage reduction or homing gun damage multiplier
+
+
